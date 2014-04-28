@@ -29,9 +29,11 @@ class BusinessHours
 		start_date = Date.parse(start_date_time)
 		if is_closed?(start_date)
 			start_date = start_date.next
-		end
 			opening_time , closing_time = change_schedule(start_date)
-			calculate_time(start_date,start_time,time_interval,opening_time,closing_time)		
+			calculate_deadline(time_interval,start_date.to_s + '  ' + opening_time.to_s)
+		else
+			calculate_time(start_date,start_time,time_interval)	
+		end	
 	end
  	
  	def change_schedule(date)
@@ -45,8 +47,15 @@ class BusinessHours
 		opening_closing_time
  	end
 
- 	def calculate_time(date,start_time,time_interval,opening_time,closing_time)
-		time_deff_in_seconds = timeDefference(start_time , closing_time)
+ 	def calculate_time(date,start_time,time_interval)
+ 		opening_time , closing_time = change_schedule(date)
+ 		if start_time.strftime("%R %p").between?(opening_time,closing_time) 
+			
+			time_deff_in_seconds = timeDefference(opening_time , closing_time)
+		else
+
+			time_deff_in_seconds = timeDefference(start_time.strftime("%R %p") , closing_time)
+		end
 		if time_interval > time_deff_in_seconds
 			time_left = time_interval - time_deff_in_seconds
 			calculate_deadline(time_left, date.next.next.to_s + '  ' + opening_time.to_s)
@@ -54,6 +63,7 @@ class BusinessHours
 			resultant_time = (Time.parse(start_time.to_s) + time_interval).to_s.split(' ')
 			"#{date.to_s}  #{resultant_time[1].to_s}"
 		end	
+
 	end
 
 	def is_closed?(date)
@@ -61,7 +71,7 @@ class BusinessHours
 	end
 	
 	def timeDefference(start_time, closing_time)
-		start_time = start_time.strftime("%R %p")
+		 #start_time = start_time.strftime("%R %p")
 		(Time.parse(start_time) - Time.parse(closing_time)).abs.to_i
 	end
 end
